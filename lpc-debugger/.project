@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>lpc-debugger</name>
-	<comment></comment>
+	<comment>LPC debugger</comment>
 	<projects>
 	</projects>
 	<buildSpec>

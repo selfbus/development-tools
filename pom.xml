@@ -67,4 +67,11 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <distributionManagement>
+    <repository>
+      <id>selfbus-tools-deploy</id>
+      <url>${selfbus-tools-deploy.url}</url>
+    </repository>
+  </distributionManagement>
 </project>

@@ -2,7 +2,7 @@
  <modelVersion>4.0.0</modelVersion>
  <groupId>org.selfbus.development-tools</groupId>
  <artifactId>lpc-debugger</artifactId>
- <version>0.4-SNAPSHOT</version>
+ <version>0.4</version>
  <name>LPC Debugger</name>
  <properties>
   <mainClass>selfbus.debugger.Main</mainClass>

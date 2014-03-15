@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>lpc-debugger</artifactId>
-  <version>0.4</version>
+  <version>0.5-SNAPSHOT</version>
   <name>LPC Debugger</name>
   <description>A tool for debugging C programs running on a LPC microcontroller</description>
 

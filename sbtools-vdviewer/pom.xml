@@ -10,7 +10,16 @@
  <name>sbtools-vdviewer</name>
  <description>A viewer for ETS product databases</description>
  <build>
+  <!-- <finalName>${artifactId}</finalName> -->
   <plugins>
+   <plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+     <source>1.7</source>
+     <target>1.7</target>
+     <encoding>UTF-8</encoding>
+    </configuration>
+   </plugin>
    <plugin>
     <artifactId>maven-jar-plugin</artifactId>
     <version>2.3</version>
@@ -102,6 +111,11 @@
    <groupId>com.jgoodies</groupId>
    <artifactId>jgoodies-validation</artifactId>
    <version>2.4.2</version>
+  </dependency>
+  <dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <scope>test</scope>
   </dependency>
  </dependencies>
 </project>

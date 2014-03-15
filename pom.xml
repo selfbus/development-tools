@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
  <modelVersion>4.0.0</modelVersion>
- <groupId>selfbus.development-tools</groupId>
+ <groupId>org.selfbus.development-tools</groupId>
  <artifactId>root</artifactId>
  <version>1.0-SNAPSHOT</version>
  <name>Selfbus Development Tools</name>
@@ -8,9 +8,9 @@
  <description>Tools for the PC for EIB device development.</description>
  <packaging>pom</packaging>
  <scm>
-  <connection>git://github.com/selfbus/lpc-debugger.git</connection>
   <url>https://github.com/selfbus/development-tools</url>
-  <developerConnection>git@github.com:selfbus/development-tools.git</developerConnection>
+  <connection>scm:git:git@github.com:selfbus/development-tools.git</connection>
+  <developerConnection>scm:git:git@github.com:selfbus/development-tools.git</developerConnection>
  </scm>
  <modules>
   <module>lpc-debugger</module>

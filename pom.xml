@@ -8,6 +8,7 @@
   <url>http://www.selfbus.org</url>
   <description>Tools for the PC for EIB device development.</description>
   <packaging>pom</packaging>
+
   <developers>
     <developer>
       <id>stefant</id>
@@ -18,20 +19,65 @@
       <timezone>1</timezone>
     </developer>
   </developers>
+
   <scm>
     <url>https://github.com/selfbus/development-tools</url>
     <connection>scm:git:git@github.com:selfbus/development-tools.git</connection>
     <developerConnection>scm:git:git@github.com:selfbus/development-tools.git</developerConnection>
   </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <tools-libraries.version>0.2.2</tools-libraries.version>
   </properties>
+
   <modules>
     <module>lpc-debugger</module>
     <module>sbtools-sniffer</module>
     <module>sbtools-vdviewer</module>
   </modules>
+
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh</artifactId>
+      </extension>
+    </extensions>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-deploy</id>
+            <phase>none</phase> <!-- disable default deploy -->
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>wagon-maven-plugin</artifactId>
+        <version>1.0-beta-5</version>
+        <executions>
+          <execution>
+            <id>upload-zip</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>upload</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <fromDir>${project.build.directory}</fromDir>
+          <includes>*.zip</includes>
+          <url>${selfbus-development-tools-deploy.url}</url>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -70,8 +116,8 @@
 
   <distributionManagement>
     <repository>
-      <id>selfbus-tools-deploy</id>
-      <url>${selfbus-tools-deploy.url}</url>
+      <id>selfbus-development-tools-deploy</id>
+      <url>${selfbus-development-tools-deploy.url}</url>
     </repository>
   </distributionManagement>
 </project>

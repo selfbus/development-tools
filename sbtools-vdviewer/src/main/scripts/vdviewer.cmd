@@ -3,7 +3,7 @@ setlocal
 
 cd libs
 set CLASSPATH=%CLASSPATH%;.
-java -jar sbtools-vdviewer-0.2-SNAPSHOT.jar org.selfbus.sbtools.vdviewer.VdViewer
+java -jar MAIN_JAR MAIN_CLASS
 
 if %ERRORLEVEL% neq 0 (
    echo.

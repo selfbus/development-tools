@@ -8,7 +8,7 @@
 
  <artifactId>sbtools-sniffer</artifactId>
  <name>sbtools-sniffer</name>
- <version>0.7</version>
+ <version>0.8-SNAPSHOT</version>
  <description>Serial communication sniffer</description>
 
  <properties>

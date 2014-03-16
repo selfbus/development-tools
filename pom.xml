@@ -123,10 +123,4 @@
     </dependencies>
   </dependencyManagement>
 
-  <distributionManagement>
-    <repository>
-      <id>selfbus-development-tools-deploy</id>
-      <url>${selfbus-development-tools-deploy.url}</url>
-    </repository>
-  </distributionManagement>
 </project>

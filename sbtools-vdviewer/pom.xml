@@ -82,7 +82,6 @@
           </execution>
         </executions>
         <configuration>
-          <!-- <finalName>sbtools-vdviewer-${project.version}</finalName> -->
           <ignorePermissions>false</ignorePermissions>
           <appendAssemblyId>false</appendAssemblyId>
           <archive>

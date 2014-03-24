@@ -54,18 +54,19 @@ public abstract class AbstractApplication
 
    public Properties getConfig()
    {
-      return this.config;
+      return config;
    }
 
    public void loadConfig(File configFile)
    {
       try
       {
-         this.config.load(new FileInputStream(configFile));
+         LOGGER.debug("Loading config {}", configFile);
+         config.load(new FileInputStream(configFile));
       }
       catch (IOException e)
       {
-         throw new RuntimeException("failed to load configuration " + configFile, e);
+         throw new RuntimeException("Failed to load configuration " + configFile, e);
       }
    }
 
@@ -73,11 +74,12 @@ public abstract class AbstractApplication
    {
       try
       {
-         this.config.store(new FileOutputStream(configFile), comment);
+         LOGGER.debug("Saving config {}", configFile);
+         config.store(new FileOutputStream(configFile), comment);
       }
       catch (IOException e)
       {
-         throw new RuntimeException("failed to save configuration " + configFile, e);
+         throw new RuntimeException("Failed to save configuration " + configFile, e);
       }
    }
 

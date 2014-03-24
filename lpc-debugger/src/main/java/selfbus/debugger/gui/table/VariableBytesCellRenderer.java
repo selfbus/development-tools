@@ -148,7 +148,6 @@ public class VariableBytesCellRenderer extends JPanel implements TableCellRender
       if (dropLocation != null && !dropLocation.isInsertRow() && !dropLocation.isInsertColumn()
          && dropLocation.getRow() == row && dropLocation.getColumn() == column)
       {
-
          fg = DefaultLookup.getColor(this, ui, "Table.dropCellForeground");
          bg = DefaultLookup.getColor(this, ui, "Table.dropCellBackground");
 
@@ -274,7 +273,6 @@ public class VariableBytesCellRenderer extends JPanel implements TableCellRender
          || propertyName == "displayedMnemonic"
          || ((propertyName == "font" || propertyName == "foreground") && oldValue != newValue && getClientProperty(javax.swing.plaf.basic.BasicHTML.propertyKey) != null))
       {
-
          super.firePropertyChange(propertyName, oldValue, newValue);
       }
    }

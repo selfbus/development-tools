@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashSet;
@@ -11,10 +13,13 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
 
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -22,6 +27,7 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
@@ -43,6 +49,7 @@ import selfbus.debugger.gui.table.VariablesTableModel;
 import selfbus.debugger.misc.I18n;
 import selfbus.debugger.misc.ImageCache;
 import selfbus.debugger.model.Variable;
+import selfbus.debugger.model.VariableUtils;
 import selfbus.debugger.serial.SerialPortUtil;
 
 /**
@@ -51,11 +58,14 @@ import selfbus.debugger.serial.SerialPortUtil;
 public class MainWindow extends JFrame implements DebugListener
 {
    private static final long serialVersionUID = 8206952584001708390L;
+//   private static final Logger LOGGER = LoggerFactory.getLogger(MainWindow.class);
    private static final int TABLE_COLUMNS_MARGIN = 4;
 
    private static MainWindow instance;
 
    private JToolBar toolBar = new JToolBar("mainToolbar");
+   private JPanel statusBar = new JPanel();
+   private JLabel statusVariable = new JLabel();
    private JComboBox<String> cboConnection = new JComboBox<String>();
    private VariablesTableModel varsTableModel;
    private TableRowSorter<VariablesTableModel> rowSorter;
@@ -65,7 +75,7 @@ public class MainWindow extends JFrame implements DebugListener
    private boolean filterVariables;
    private final Application application;
    private final JTable varsTable = new JTable();
-   private final JScrollPane variablesView;
+   private final JScrollPane varsView;
    private final String demoConnectionName = I18n.getMessage("MainWindow.simulatedConnection");
    private final JPopupMenu tablePopup = new JPopupMenu();
    private JToggleButton filterVarsButton;
@@ -100,7 +110,13 @@ public class MainWindow extends JFrame implements DebugListener
       setMinimumSize(new Dimension(700, 500));
       setLayout(new BorderLayout());
 
-      add(toolBar, "North");
+      add(statusBar, BorderLayout.SOUTH);
+      statusBar.setLayout(new BorderLayout());
+      statusVariable.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+      statusVariable.setText(" ");
+      statusBar.add(statusVariable, BorderLayout.CENTER);
+
+      add(toolBar, BorderLayout.NORTH);
       setupToolbar();
 
       varsTable.setGridColor(getBackground());
@@ -109,12 +125,30 @@ public class MainWindow extends JFrame implements DebugListener
       tableHeader.setPopupMenu(tablePopup);
       varsTable.setTableHeader(tableHeader);
 
-      variablesView = new JScrollPane(varsTable);
-      variablesView.getVerticalScrollBar().setUnitIncrement(25);
-      variablesView.getVerticalScrollBar().setBlockIncrement(50);
-      variablesView.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-      variablesView.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-      add(variablesView, "Center");
+      varsTable.addMouseListener(new MouseAdapter()
+      {
+         public void mouseClicked(MouseEvent e)
+         {
+            int idx = rowSorter.convertRowIndexToModel(varsTable.rowAtPoint(e.getPoint()));
+            final Variable var = varsTableModel.getVariable(idx);
+
+            new SwingWorker<Void,Void>()
+            {
+               protected Void doInBackground() throws Exception
+               {
+                  updateStatusBar(var);
+                  return null;
+               }
+            }.execute();
+         }
+      });
+
+      varsView = new JScrollPane(varsTable);
+      varsView.getVerticalScrollBar().setUnitIncrement(25);
+      varsView.getVerticalScrollBar().setBlockIncrement(50);
+      varsView.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+      varsView.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+      add(varsView, "Center");
 
       cboConnection.setMaximumSize(new Dimension(150, 32));
       cboConnection.addActionListener(new ActionListener()
@@ -204,6 +238,7 @@ public class MainWindow extends JFrame implements DebugListener
                         config.setProperty("columnVisible" + cidx, "0");
                         varsTable.getColumnModel().removeColumn(col);
                      }
+                     packTable();
                   }
                });
             }
@@ -234,8 +269,11 @@ public class MainWindow extends JFrame implements DebugListener
       toolBar.add(actionFactory.getAction("autoUpdateAction"));
       toolBar.add(actionFactory.getAction("unusedValuesAction"));
       toolBar.addSeparator();
-      toolBar.add(actionFactory.getAction("showColumnsChooserAction"));
+      toolBar.add(actionFactory.getAction("allVisibleAction"));
+      toolBar.add(actionFactory.getAction("allInvisibleAction"));
       toolBar.add(filterVarsButton);
+      toolBar.addSeparator();
+      toolBar.add(actionFactory.getAction("showColumnsChooserAction"));
       toolBar.add(actionFactory.getAction("settingsAction"));
    }
 
@@ -338,6 +376,7 @@ public class MainWindow extends JFrame implements DebugListener
    {
       initialUpdate = true;
       actionFactory.getAction("updateAction").actionPerformed(null);
+      updateStatusBar(null);
    }
 
    /**
@@ -347,6 +386,53 @@ public class MainWindow extends JFrame implements DebugListener
    {
       if (varsTableModel != null)
          varsTableModel.markAllUnused();
+   }
+
+   /**
+    * Mark all variables as visible.
+    */
+   public void allVariablesVisible()
+   {
+      if (varsTableModel != null)
+      {
+         varsTableModel.setAllVisible(true);
+         updateHiddenVariables();
+      }
+   }
+
+   /**
+    * Mark all variables as invisible.
+    */
+   public void allVariablesInvisible()
+   {
+      if (varsTableModel != null)
+      {
+         varsTableModel.setAllVisible(false);
+         updateHiddenVariables();
+      }
+   }
+
+   /**
+    * Update the variable in the status bar.
+    * 
+    * @param var - the variable to show in the status bar, may be null.
+    */
+   public void updateStatusBar(Variable var)
+   {
+      if (var == null)
+      {
+         statusVariable.setText(" ");
+      }
+      else
+      {
+         statusVariable.setText(I18n.formatMessage("MainWindow.statusBarVariable",
+               new String[] {
+                  VariableUtils.createTypeStr(var),
+                  var.getName(),
+                  Integer.toHexString(var.getAddress()),
+                  var.getModule()
+               }));
+      }
    }
 
    /**
@@ -554,7 +640,7 @@ public class MainWindow extends JFrame implements DebugListener
       @Override
       public void tableChanged(TableModelEvent e)
       {
-         if (!updatePending && e.getColumn() == VariablesTableModel.VISIBLE_COLUMN && filterVariables && rowSorter != null)
+         if (!updatePending && e.getColumn() == VariablesTableModel.VISIBLE_COLUMN)
          {
             updatePending = true;
 
@@ -564,9 +650,10 @@ public class MainWindow extends JFrame implements DebugListener
                public void run()
                {
                   updatePending = false;
-
-                  rowSorter.sort();
                   varVisibilityToConfig();
+
+                  if (filterVariables && rowSorter != null)
+                     rowSorter.sort();
                }
             });
          }

@@ -1,6 +1,7 @@
 package selfbus.debugger.actions;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 
 import javax.swing.KeyStroke;
 
@@ -20,7 +21,7 @@ public final class ToggleFilterAction extends BasicAction
       super(I18n.getMessage("ToggleFilterAction.name"),
             I18n.getMessage("ToggleFilterAction.toolTip"),
             ImageCache.getIcon("icons/filter"));
-      putValue("AcceleratorKey", KeyStroke.getKeyStroke(79, 128));
+      putValue("AcceleratorKey", KeyStroke.getKeyStroke('f', InputEvent.CTRL_DOWN_MASK));
    }
 
    public void actionPerformed(ActionEvent e)

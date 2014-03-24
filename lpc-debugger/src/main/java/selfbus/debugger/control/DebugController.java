@@ -19,11 +19,11 @@ import selfbus.debugger.model.cdb.SymbolType;
 public class DebugController extends AbstractDebugController implements Closeable
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(DebugController.class);
-   private static final int MAX_ADDR = 256;
+   private static final int MAX_CACHE_ADDR = 256;
    private Connection connection;
    private Set<Variable> variables;
    private String connectionName;
-   private final short[] memCache = new short[256];
+   private final short[] memCache = new short[MAX_CACHE_ADDR];
    private AddressRanges addrRanges = new LpcAddressRanges();
    private boolean filterVariables = true;
 
@@ -126,13 +126,13 @@ public class DebugController extends AbstractDebugController implements Closeabl
 
    protected void clearMemCache()
    {
-      for (int i = 0; i < MAX_ADDR; i++)
+      for (int i = 0; i < MAX_CACHE_ADDR; i++)
          this.memCache[i] = -1;
    }
 
    protected byte[] readMem(int address, int size) throws IOException
    {
-      if (address > MAX_ADDR)
+      if (address > MAX_CACHE_ADDR)
       {
          return this.connection.readMem(address, size);
       }
@@ -146,7 +146,7 @@ public class DebugController extends AbstractDebugController implements Closeabl
 
    protected byte readMem(int address) throws IOException
    {
-      if (address > MAX_ADDR)
+      if (address >= MAX_CACHE_ADDR)
       {
          return this.connection.readMem(address);
       }

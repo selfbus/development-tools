@@ -6,11 +6,7 @@ import javax.swing.table.AbstractTableModel;
 
 import selfbus.debugger.misc.I18n;
 import selfbus.debugger.model.Variable;
-import selfbus.debugger.model.cdb.ArraySymbolSpec;
-import selfbus.debugger.model.cdb.StructureSymbolSpec;
-import selfbus.debugger.model.cdb.SymbolSign;
-import selfbus.debugger.model.cdb.SymbolSpec;
-import selfbus.debugger.model.cdb.SymbolType;
+import selfbus.debugger.model.VariableUtils;
 
 /**
  * A table model for {@link Variable}s.
@@ -70,7 +66,7 @@ public class VariablesTableModel extends AbstractTableModel
       for (int i = 0; i < vars.size(); ++i)
       {
          Variable var = vars.get(i);
-         types.add(createTypeStr(var));
+         types.add(VariableUtils.createTypeStr(var));
       }
    }
 
@@ -161,6 +157,17 @@ public class VariablesTableModel extends AbstractTableModel
    }
 
    /**
+    * Get a variable.
+    * 
+    * @param row - the row of the variable to get
+    * @return The variable
+    */
+   public Variable getVariable(int row)
+   {
+      return vars.get(row);
+   }
+
+   /**
     * {@inheritDoc}
     */
    public void setValueAt(Object value, int row, int col)
@@ -170,48 +177,6 @@ public class VariablesTableModel extends AbstractTableModel
          vars.get(row).setVisible((Boolean) value);
          fireTableCellUpdated(row, VISIBLE_COLUMN);
       }
-   }
-   
-   /**
-    * Create a human readable string describing the type of the variable.
-    * 
-    * @param var - the variable to process
-    * @return The type as human readable string.
-    */
-   private String createTypeStr(Variable var)
-   {
-      SymbolSpec spec = var.getSpec();
-
-      if (spec == null)
-      {
-         return " ";
-      }
-      SymbolType type = spec.getType();
-      SymbolSign sign = spec.getSign();
-
-      if (SymbolType.SBIT.equals(type))
-      {
-         sign = null;
-      }
-      String signStr = SymbolSign.UNSIGNED.equals(sign) ? "u" : "";
-      String typeStr = signStr + type.toString().toLowerCase();
-
-      if (SymbolType.BIT_FIELD.equals(type))
-      {
-         int count = ((ArraySymbolSpec) spec).getCount();
-         if (count == 1) return "bit";
-         return "bit[" + ((ArraySymbolSpec) spec).getCount() + ']';
-      }
-      if ((spec instanceof ArraySymbolSpec))
-      {
-         return typeStr + '[' + ((ArraySymbolSpec) spec).getCount() + ']';
-      }
-      if ((spec instanceof StructureSymbolSpec))
-      {
-         return "struct " + ((StructureSymbolSpec) spec).getName();
-      }
-
-      return typeStr;
    }
 
    /**
@@ -224,6 +189,22 @@ public class VariablesTableModel extends AbstractTableModel
          vars.get(row).markUnused();
          fireValuesChanged(row);
       }
+   }
+
+   /**
+    * Set the visibility of all variables.
+    * 
+    * @param visible - the visibility to set
+    */
+   public void setAllVisible(boolean visible)
+   {
+      for (int row = vars.size() - 1; row >= 0; --row)
+      {
+         vars.get(row).setVisible(visible);
+         fireTableCellUpdated(row, VISIBLE_COLUMN);
+      }
+
+      fireValuesChanged();
    }
 
    /**

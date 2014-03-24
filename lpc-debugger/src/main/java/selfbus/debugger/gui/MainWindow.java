@@ -167,7 +167,7 @@ public class MainWindow extends JFrame implements DebugListener
       final Properties config = application.getConfig();
       tablePopup.removeAll();
 
-      for (int idx = 0; idx < varsTableModel.getColumnCount(); ++idx)
+      for (int idx = 0; idx < varsTable.getColumnModel().getColumnCount(); ++idx)
       {
          final TableColumn col = varsTable.getColumnModel().getColumn(idx);
          final int cidx = idx;

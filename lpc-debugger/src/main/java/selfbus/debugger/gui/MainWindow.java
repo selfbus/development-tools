@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.HashSet;
@@ -27,7 +25,8 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
@@ -125,23 +124,43 @@ public class MainWindow extends JFrame implements DebugListener
       tableHeader.setPopupMenu(tablePopup);
       varsTable.setTableHeader(tableHeader);
 
-      varsTable.addMouseListener(new MouseAdapter()
+      varsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener()
       {
-         public void mouseClicked(MouseEvent e)
+         @Override
+         public void valueChanged(ListSelectionEvent e)
          {
-            int idx = rowSorter.convertRowIndexToModel(varsTable.rowAtPoint(e.getPoint()));
-            final Variable var = varsTableModel.getVariable(idx);
+            if (e.getValueIsAdjusting())
+               return;
 
-            new SwingWorker<Void,Void>()
+            SwingUtilities.invokeLater(new Runnable()
             {
-               protected Void doInBackground() throws Exception
+               @Override
+               public void run()
                {
-                  updateStatusBar(var);
-                  return null;
+                  int idx = rowSorter.convertRowIndexToModel(varsTable.getSelectionModel().getMinSelectionIndex());
+                  updateStatusBar(varsTableModel.getVariable(idx));
                }
-            }.execute();
+            });
          }
       });
+
+//      varsTable.addMouseListener(new MouseAdapter()
+//      {
+//         public void mouseClicked(MouseEvent e)
+//         {
+//            int idx = rowSorter.convertRowIndexToModel(varsTable.rowAtPoint(e.getPoint()));
+//            final Variable var = varsTableModel.getVariable(idx);
+//
+//            new SwingWorker<Void,Void>()
+//            {
+//               protected Void doInBackground() throws Exception
+//               {
+//                  updateStatusBar(var);
+//                  return null;
+//               }
+//            }.execute();
+//         }
+//      });
 
       varsView = new JScrollPane(varsTable);
       varsView.getVerticalScrollBar().setUnitIncrement(25);
@@ -429,7 +448,7 @@ public class MainWindow extends JFrame implements DebugListener
                new String[] {
                   VariableUtils.createTypeStr(var),
                   var.getName(),
-                  Integer.toHexString(var.getAddress()),
+                  String.format("0x%02x", var.getAddress()),
                   var.getModule()
                }));
       }

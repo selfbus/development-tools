@@ -123,4 +123,12 @@
     </dependencies>
   </dependencyManagement>
 
+  <repositories>
+    <repository>
+      <id>Dropbox.StefanT</id>
+      <name>stefant-dropbox-repo</name>
+      <url>https://dl.dropboxusercontent.com/u/133949801/mvn-repository</url>
+    </repository>
+  </repositories>
+
 </project>

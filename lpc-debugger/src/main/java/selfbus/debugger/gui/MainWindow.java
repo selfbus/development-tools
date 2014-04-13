@@ -137,8 +137,12 @@ public class MainWindow extends JFrame implements DebugListener
                @Override
                public void run()
                {
-                  int idx = rowSorter.convertRowIndexToModel(varsTable.getSelectionModel().getMinSelectionIndex());
-                  updateStatusBar(varsTableModel.getVariable(idx));
+                  int idx = varsTable.getSelectionModel().getMinSelectionIndex();
+                  if (idx >= 0)
+                     idx = rowSorter.convertRowIndexToModel(idx);
+                  if (idx >= 0)
+                     updateStatusBar(varsTableModel.getVariable(idx));
+                  else updateStatusBar(null);
                }
             });
          }

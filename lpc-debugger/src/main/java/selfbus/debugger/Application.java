@@ -225,7 +225,7 @@ public final class Application extends AbstractApplication
          }
          else
          {
-            LOGGER.info("FTS is not started from a jar. Manifest information is unavailable.");
+            LOGGER.info("Application is not started from a jar. Manifest information is unavailable.");
          }
       }
       catch (IOException e)

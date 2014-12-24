@@ -1,6 +1,7 @@
 package selfbus.debugger;
 
 import java.io.File;
+
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
@@ -31,7 +32,8 @@ public class Main
             }
          }
       }
-      if ("true".equals(app.getConfig().getProperty("connected").toLowerCase()))
+
+      if ("true".equalsIgnoreCase(app.getConfig().getProperty("connected")))
          app.getController().open();
    }
 }

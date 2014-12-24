@@ -1,14 +1,14 @@
 package selfbus.debugger.actions;
 
+import java.awt.FileDialog;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Properties;
-import javax.swing.JFileChooser;
+
 import javax.swing.KeyStroke;
-import javax.swing.filechooser.FileFilter;
 
 import selfbus.debugger.Application;
-import selfbus.debugger.gui.GlobFileFilter;
+import selfbus.debugger.filter.CdbFileNameFilter;
 import selfbus.debugger.gui.MainWindow;
 import selfbus.debugger.misc.I18n;
 import selfbus.debugger.misc.ImageCache;
@@ -38,21 +38,19 @@ public final class OpenFileAction extends BasicAction
       {
          dir = app.getHomeDir();
       }
-      JFileChooser dlg = new JFileChooser(dir);
 
-      FileFilter fileFilter = new GlobFileFilter(I18n.getMessage("FileFilter.cdb"), "*.cdb");
-      dlg.addChoosableFileFilter(fileFilter);
-      dlg.addChoosableFileFilter(dlg.getAcceptAllFileFilter());
-      dlg.setFileFilter(fileFilter);
-      dlg.setDialogTitle(I18n.formatMessage("OpenFileAction.title", new String[] { I18n.getMessage("App.name") }));
+      FileDialog fdlg = new FileDialog(mainWin);
+      fdlg.setDirectory(dir.getPath());
+      fdlg.setFilenameFilter(new CdbFileNameFilter());
+      fdlg.setTitle(I18n.formatMessage("OpenFileAction.title", new String[] { I18n.getMessage("App.name") }));
 
-      if (dlg.showOpenDialog(mainWin) != 0)
-         return;
- 
-      File file = dlg.getSelectedFile();
-      if (file == null)
+      fdlg.setVisible(true);
+
+      String fileName = fdlg.getFile();
+      if (fileName == null)
          return;
 
+      File file = new File(fdlg.getDirectory() + File.separator + fileName);
       if (!file.getAbsolutePath().equals(app.getConfig().getProperty("lastCdbFile")))
          app.getConfig().remove("hiddenVariables");
 

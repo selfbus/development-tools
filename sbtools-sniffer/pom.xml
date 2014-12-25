@@ -3,12 +3,12 @@
  <parent>
   <groupId>org.selfbus.development-tools</groupId>
   <artifactId>root</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
  </parent>
 
  <artifactId>sbtools-sniffer</artifactId>
  <name>sbtools-sniffer</name>
- <version>0.8-SNAPSHOT</version>
+ <version>1.0</version>
  <description>Serial communication sniffer</description>
 
  <properties>

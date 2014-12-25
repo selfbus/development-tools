@@ -1,7 +1,7 @@
-2014-12-24  Version 0.5-SNAPSHOT
-		Fixed display of array size
-		Fixed exception on startup if the "connected" config parameter is unset
-		Improved file open dialog, at least for Linux
+2014-12-24  Version 1.0
+	Fixed display of array size
+	Fixed exception on startup if the "connected" config parameter is unset
+	Improved file open dialog, at least for Linux
 
 2014-03-24
         Fixed exception when starting debugger with one or more columns hidden

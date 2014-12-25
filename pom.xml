@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.selfbus.development-tools</groupId>
   <artifactId>root</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <name>Selfbus Development Tools</name>
   <url>http://www.selfbus.org</url>
   <description>Tools for the PC for EIB device development.</description>

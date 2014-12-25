@@ -3,11 +3,11 @@
   <parent>
     <groupId>org.selfbus.development-tools</groupId>
     <artifactId>root</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>sbtools-vdviewer</artifactId>
-  <version>1.0</version>
+  <version>1.1-SNAPSHOT</version>
   <name>sbtools-vdviewer</name>
   <description>A viewer for ETS product databases</description>
 

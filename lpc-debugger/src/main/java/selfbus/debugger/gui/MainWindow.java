@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -33,6 +34,9 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 
+import org.apache.commons.lang3.StringUtils;
+
+import ch.qos.logback.core.status.StatusManager;
 import selfbus.debugger.Application;
 import selfbus.debugger.actions.ActionFactory;
 import selfbus.debugger.actions.AutoUpdateAction;
@@ -62,14 +66,15 @@ public class MainWindow extends JFrame implements DebugListener
 
    private static MainWindow instance;
 
-   private JToolBar toolBar = new JToolBar("mainToolbar");
-   private JPanel statusBar = new JPanel();
-   private JLabel statusVariable = new JLabel();
-   private JComboBox<String> cboConnection = new JComboBox<String>();
+   private final JToolBar toolBar = new JToolBar("mainToolbar");
+   private final JPanel statusBar = new JPanel();
+   private final JLabel statusVariable = new JLabel();
+   private final JLabel statusIndicator = new JLabel();
+   private final JComboBox<String> cboConnection = new JComboBox<String>();
    private VariablesTableModel varsTableModel;
    private TableRowSorter<VariablesTableModel> rowSorter;
-   private ExtTableColumnModel varsTableColumnModel = new ExtTableColumnModel();
-   private ActionFactory actionFactory = ActionFactory.getInstance();
+   private final ExtTableColumnModel varsTableColumnModel = new ExtTableColumnModel();
+   private final ActionFactory actionFactory = ActionFactory.getInstance();
    private boolean initialUpdate;
    private boolean filterVariables;
    private final Application application;
@@ -78,6 +83,12 @@ public class MainWindow extends JFrame implements DebugListener
    private final String demoConnectionName = I18n.getMessage("MainWindow.simulatedConnection");
    private final JPopupMenu tablePopup = new JPopupMenu();
    private JToggleButton filterVarsButton;
+   private boolean errorStatusIconType; 
+
+   private final Icon statusDisconnectedIcon = ImageCache.getIcon("misc/status-disconnected");
+   private final Icon statusErrorIcon = ImageCache.getIcon("misc/status-error");
+   private final Icon statusErrorAltIcon = ImageCache.getIcon("misc/status-error-alt");
+   private final Icon statusOkIcon = ImageCache.getIcon("misc/status-ok");
 
    /**
     * Create a main application window.
@@ -86,14 +97,16 @@ public class MainWindow extends JFrame implements DebugListener
     */
    public MainWindow(final Application application)
    {
-      super(I18n.formatMessage("App.name", new String[] { application.getVersion() }));
+      super();
 
       this.application = application;
       instance = this;
 
       filterVariables = "1".equals(application.getConfig().getProperty("filterVariables", "1"));
 
+      setTitleFile(null);
       setDefaultCloseOperation(2);
+
       addWindowListener(new WindowAdapter()
       {
          public void windowClosing(WindowEvent e)
@@ -110,10 +123,7 @@ public class MainWindow extends JFrame implements DebugListener
       setLayout(new BorderLayout());
 
       add(statusBar, BorderLayout.SOUTH);
-      statusBar.setLayout(new BorderLayout());
-      statusVariable.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
-      statusVariable.setText(" ");
-      statusBar.add(statusVariable, BorderLayout.CENTER);
+      setupStatusbar();
 
       add(toolBar, BorderLayout.NORTH);
       setupToolbar();
@@ -217,6 +227,20 @@ public class MainWindow extends JFrame implements DebugListener
    }
 
    /**
+    * Set the file that is displayed in the main window.
+    * 
+    * @param name - the name of the file in the main window
+    */
+   public void setTitleFile(String name)
+   {
+      String title = I18n.formatMessage("App.name", new String[] { application.getVersion() });
+
+      if (StringUtils.isEmpty(name))
+         setTitle(title);
+      else setTitle(name + " - " + title);
+   }
+   
+   /**
     * Setup the tablePopup.
     */
    protected void setupTablePopup()
@@ -271,6 +295,22 @@ public class MainWindow extends JFrame implements DebugListener
       }
 
       varsTable.getTableHeader().add(tablePopup);
+   }
+
+   /**
+    * Setup the status bar.
+    */
+   protected void setupStatusbar()
+   {
+      statusBar.setLayout(new BorderLayout());
+
+      statusIndicator.setBorder(BorderFactory.createLineBorder(statusBar.getBackground(), 2));
+      statusIndicator.setIcon(statusDisconnectedIcon);
+      statusBar.add(statusIndicator, BorderLayout.WEST);
+
+      statusVariable.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+      statusVariable.setText(" ");
+      statusBar.add(statusVariable, BorderLayout.CENTER);
    }
 
    /**
@@ -539,6 +579,9 @@ public class MainWindow extends JFrame implements DebugListener
    @Override
    public void connectionOpened()
    {
+      errorStatusIconType = false;
+      status(true, "");
+
       SwingUtilities.invokeLater(new Runnable()
       {
          @Override
@@ -575,6 +618,9 @@ public class MainWindow extends JFrame implements DebugListener
          @Override
          public void run()
          {
+            statusIndicator.setIcon(statusDisconnectedIcon);
+            statusVariable.setText("");
+
             ((ConnectAction) actionFactory.getAction("connectAction")).setDisconnected();
 
             actionFactory.getAction("updateAction").setEnabled(false);
@@ -582,6 +628,32 @@ public class MainWindow extends JFrame implements DebugListener
             AutoUpdateAction autoUpdate = (AutoUpdateAction) actionFactory.getAction("autoUpdateAction");
             autoUpdate.setEnabled(false);
             autoUpdate.stopAutoUpdate();
+         }
+      });
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   @Override
+   public synchronized void status(final boolean success, final String message)
+   {
+      SwingUtilities.invokeLater(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            statusVariable.setText(message);
+
+            if (success)
+            {
+               statusIndicator.setIcon(statusOkIcon);
+            }
+            else
+            {
+               statusIndicator.setIcon(errorStatusIconType ? statusErrorIcon : statusErrorAltIcon);
+               errorStatusIconType = !errorStatusIconType;
+            }
          }
       });
    }

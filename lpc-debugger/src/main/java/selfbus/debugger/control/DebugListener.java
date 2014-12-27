@@ -38,4 +38,12 @@ public interface DebugListener
     * Called when the connection to the debugged device is closed.
     */
    public void connectionClosed();
+
+   /**
+    * Called when communicating.
+    * 
+    * @param success - true if the communication is/was successful
+    * @param message - a message, esp. when the communication failed
+    */
+   public void status(boolean success, String message);
 }

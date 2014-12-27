@@ -62,7 +62,7 @@ public final class Application extends AbstractApplication
     */
    public String getVersion()
    {
-      return version == null ? "(devel)" : version;
+      return version == null ? "(development)" : version;
    }
 
    /**
@@ -161,7 +161,7 @@ public final class Application extends AbstractApplication
 
       LOGGER.debug("{} variables loaded", variables.size());
       controller.setVariables(variables);
-      win.setTitle(file.getName() + " - " + I18n.getMessage("App.name"));
+      win.setTitleFile(file.getName());
       cdbFile = file;
 
       win.initialUpdate();
@@ -193,7 +193,7 @@ public final class Application extends AbstractApplication
       controller.setVariables(variables);
 
       getConfig().setProperty("lastOpenDir", file.getParentFile().getAbsolutePath());
-      win.setTitle(file.getName() + " - " + I18n.getMessage("App.name"));
+      win.setTitleFile(file.getName());
    }
 
    public void reloadFiles()

@@ -82,4 +82,10 @@ public abstract class AbstractDebugController
       for (DebugListener listener : this.listeners)
          listener.connectionClosed();
    }
+
+   public void fireStatus(boolean success, String message)
+   {
+      for (DebugListener listener : this.listeners)
+         listener.status(success, message);
+   }
 }

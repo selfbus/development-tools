@@ -23,13 +23,13 @@ public enum SymbolType
 
    UPPER_POINTER("DI"),
 
-   LONG("SL"),
+   LONG("SL", 4),
 
-   INT("SI"),
+   INT("SI", 2),
 
-   CHAR("SC"),
+   CHAR("SC", 1),
 
-   SHORT("SS"),
+   SHORT("SS", 2),
 
    VOID("SV"),
 
@@ -41,7 +41,11 @@ public enum SymbolType
 
    BIT_FIELD("SB");
 
+   /** The symbol type string. */
    public final String type;
+
+   /** The length of the type in bytes. */
+   public final int len;
 
    public static SymbolType valueOfType(String cdbType)
    {
@@ -56,6 +60,12 @@ public enum SymbolType
 
    private SymbolType(String type)
    {
+      this(type, 0);
+   }
+
+   private SymbolType(String type, int len)
+   {
       this.type = type;
+      this.len = len;
    }
 }

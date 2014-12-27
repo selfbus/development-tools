@@ -1,5 +1,7 @@
 package selfbus.debugger.control;
 
+import gnu.io.UnsupportedCommOperationException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,8 +58,10 @@ public class SerialConnection implements Connection
 
          portIn = port.getInputStream();
          portOut = port.getOutputStream();
+
+         port.setReceiveTimeout(Integer.parseInt(props.getProperty("autoUpdateMsec", "250")));
       }
-      catch (IOException e)
+      catch (IOException|NumberFormatException|UnsupportedCommOperationException e)
       {
          throw new RuntimeException(I18n.formatMessage("SerialConnection.errOpen", new String[] { this.portName }), e);
       }
@@ -95,11 +99,11 @@ public class SerialConnection implements Connection
     */
    public byte readMem(int address) throws IOException
    {
-      if (this.portIn != null)
+      if (portIn != null)
       {
-         this.portOut.write(address);
+         portOut.write(address);
 
-         int val = this.portIn.read();
+         int val = portIn.read();
          if (val == -1)
          {
             throw new IOException(I18n.getMessage("SerialConnection.ReadTimeout"));

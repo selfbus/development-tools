@@ -2,9 +2,12 @@ package selfbus.debugger.gui.table;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.io.IOException;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+
+import org.selfbus.sbtools.knxcom.telegram.TelegramFactory;
 
 import selfbus.debugger.misc.ByteUtils;
 import selfbus.debugger.model.Variable;
@@ -64,6 +67,24 @@ public class VariableValueCellRenderer extends DefaultTableCellRenderer
          {
             return Integer.toBinaryString(ByteUtils.toInteger(var.getValue(), 0, size));
          }
+         else if (SymbolType.CHAR.equals(type) && "telegramm".equals(var.getName()))
+         {
+            try
+            {
+               return TelegramFactory.createTelegram(var.getValue()).toString();
+            }
+            catch (IOException e)
+            {
+               return "(invalid telegram)";
+            }
+         }  
+         else if (type.len > 0)
+         {
+            StringBuilder builder = new StringBuilder();
+            for (int offs = 0; offs < size; offs += type.len)
+               builder.append(ByteUtils.toInteger(var.getValue(), offs, type.len)).append(' ');
+            return builder.toString();
+         }
       }
       else if ((type == null) && (size > 0) && (size <= 4))
       {
@@ -73,8 +94,8 @@ public class VariableValueCellRenderer extends DefaultTableCellRenderer
       {
          return Integer.toString(var.getValue()[0]);
       }
-      else if ((SymbolType.CHAR.equals(type)) || (SymbolType.SHORT.equals(type)) || (SymbolType.INT.equals(type))
-         || (SymbolType.LONG.equals(type)))
+      else if (SymbolType.CHAR.equals(type) || SymbolType.SHORT.equals(type) || SymbolType.INT.equals(type)
+         || SymbolType.LONG.equals(type))
       {
          int val = ByteUtils.toInteger(var.getValue(), 0, size);
          return Integer.toString(val);

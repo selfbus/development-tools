@@ -105,8 +105,7 @@ public class SerialPortWrapper
             Thread.sleep(100);
          }
 
-         serialPort.enableReceiveTimeout(250);
-         serialPort.enableReceiveThreshold(1024);
+         setReceiveTimeout(250);
 
          serialPort.setDTR(true);
          serialPort.setRTS(true);
@@ -143,7 +142,7 @@ public class SerialPortWrapper
 
       try
       {
-         // Enable a receive timeout, to avoid hangs during close
+         // Set a short receive timeout, to avoid hangs during close
          serialPort.enableReceiveTimeout(250);
       }
       catch (Exception e)

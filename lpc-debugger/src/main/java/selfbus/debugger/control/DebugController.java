@@ -20,12 +20,14 @@ public class DebugController extends AbstractDebugController implements Closeabl
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(DebugController.class);
    private static final int MAX_CACHE_ADDR = 256;
+   private final String errMsgVariableUpdate = I18n.getMessage("Error.variableUpdate");
    private Connection connection;
    private Set<Variable> variables;
    private String connectionName;
    private final short[] memCache = new short[MAX_CACHE_ADDR];
    private AddressRanges addrRanges = new LpcAddressRanges();
    private boolean filterVariables = true;
+   private boolean statusUpdated;
 
    public synchronized void setConnectionName(String name)
    {
@@ -44,10 +46,10 @@ public class DebugController extends AbstractDebugController implements Closeabl
 
    public synchronized void close()
    {
-      if (this.connection != null)
+      if (connection != null)
       {
-         this.connection.close();
-         this.connection = null;
+         connection.close();
+         connection = null;
 
          fireConnectionClosed();
       }
@@ -55,23 +57,30 @@ public class DebugController extends AbstractDebugController implements Closeabl
 
    public synchronized boolean isOpen()
    {
-      return this.connection != null;
+      return connection != null;
    }
 
    public void update()
    {
-      LOGGER.trace("Updating the variables");
-
+      LOGGER.debug("Updating the variables");
       fireBeforeUpdate();
       clearMemCache();
+
+      statusUpdated = false;
 
       try
       {
          for (Variable var : this.variables)
          {
             if (!filterVariables || var.isVisible())
-               update(var);
+            {
+               if (!update(var))
+                  break;
+            }
          }
+
+         if (!statusUpdated && connection != null)
+            fireStatus(true, "");
       }
       finally
       {
@@ -79,14 +88,14 @@ public class DebugController extends AbstractDebugController implements Closeabl
       }
    }
 
-   public void update(Variable var)
+   public boolean update(Variable var)
    {
       int address = var.getAddress();
       int size = var.size();
 
-      if ((this.connection == null) || (address == -1))
+      if (connection == null || address == -1)
       {
-         return;
+         return true;
       }
       try
       {
@@ -117,11 +126,16 @@ public class DebugController extends AbstractDebugController implements Closeabl
       }
       catch (IOException e)
       {
-         LOGGER.warn("Communication error, closing connection");
-         close();
-
-         Dialogs.showExceptionDialog(e, I18n.getMessage("Error.variableUpdate"));
+         if (!statusUpdated)
+         {
+            statusUpdated = true;
+            LOGGER.warn("Communication error");
+            fireStatus(false, errMsgVariableUpdate);
+         }
+         return false;
       }
+
+      return true;
    }
 
    protected void clearMemCache()

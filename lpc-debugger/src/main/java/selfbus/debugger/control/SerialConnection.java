@@ -10,6 +10,7 @@ import java.util.Properties;
 import org.apache.commons.lang3.Validate;
 
 import selfbus.debugger.Application;
+import selfbus.debugger.misc.ConfigDefault;
 import selfbus.debugger.misc.I18n;
 import selfbus.debugger.serial.SerialPortWrapper;
 
@@ -49,7 +50,7 @@ public class SerialConnection implements Connection
       Validate.isTrue(!port.isOpened());
 
       Properties props = Application.getInstance().getConfig();
-      int baudRate = Integer.parseInt(props.getProperty("serial.baudRate", "115200"));
+      int baudRate = Integer.parseInt(props.getProperty("serial.baudRate", Integer.toString(ConfigDefault.BAUD_RATE)));
       port.setResetOnOpen(Integer.parseInt(props.getProperty("resetOnOpen", "0")) == 1);
 
       try
@@ -59,7 +60,7 @@ public class SerialConnection implements Connection
          portIn = port.getInputStream();
          portOut = port.getOutputStream();
 
-         port.setReceiveTimeout(Integer.parseInt(props.getProperty("autoUpdateMsec", "250")));
+         port.setReceiveTimeout(Integer.parseInt(props.getProperty("receiveTimeout", Integer.toString(ConfigDefault.AUTO_UPDATE_MSEC))));
       }
       catch (IOException|NumberFormatException|UnsupportedCommOperationException e)
       {

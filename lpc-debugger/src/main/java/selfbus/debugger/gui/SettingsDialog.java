@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import selfbus.debugger.actions.ActionFactory;
 import selfbus.debugger.actions.AutoUpdateAction;
+import selfbus.debugger.misc.ConfigDefault;
 import selfbus.debugger.misc.I18n;
 
 /**
@@ -35,15 +36,6 @@ public class SettingsDialog extends JDialog
    private static final long serialVersionUID = 2238040856367925931L;
    private static final Logger LOGGER = LoggerFactory.getLogger(SettingsDialog.class);
 
-   // Default auto update, in milliseconds
-   private static final int DEFAULT_AUTO_UPDATE_MSEC = 2000;
-
-   // Default receive timeout, in milliseconds
-   private static final int DEFAULT_RECV_TIMEOUT_MSEC = 250;
-
-   // Default baud rate
-   private static final int DEFAULT_BAUD_RATE = 115200;
-
    private static final Insets PARAGRAPH_INSETS = new Insets(10, 8, 2, 8);
    private static final Insets INSETS = new Insets(2, 8, 2, 8);
    private static final int[] AUTO_UPDATE_MSEC = { 0, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 };
@@ -52,6 +44,7 @@ public class SettingsDialog extends JDialog
    private final JComboBox<Integer> cboBaudRate = new JComboBox<Integer>();
    private final JComboBox<String> cboAutoUpdate = new JComboBox<String>();
    private final JTextField inpRecvTimeout = new JTextField();
+   private final JTextField inpTelegramVars = new JTextField();
    private final JCheckBox cboResetOnOpen = new JCheckBox(I18n.getMessage("Settings.resetOnOpen"));
    private final Properties props;
 
@@ -90,6 +83,10 @@ public class SettingsDialog extends JDialog
       add(new JLabel(I18n.getMessage("Settings.receiveTimeout")), new GridBagConstraints(0, ++row, 1, 1, 1,
          1, 18, 0, PARAGRAPH_INSETS, 0, 0));
       add(inpRecvTimeout, new GridBagConstraints(0, ++row, 2, 2, 1, 1, 18, GridBagConstraints.HORIZONTAL, INSETS, 0, 0));
+      
+      add(new JLabel(I18n.getMessage("Settings.telegramVariables")), new GridBagConstraints(0, ++row, 1, 1, 1,
+         1, 18, 0, PARAGRAPH_INSETS, 0, 0));
+      add(inpTelegramVars, new GridBagConstraints(0, ++row, 2, 2, 1, 1, 18, GridBagConstraints.HORIZONTAL, INSETS, 0, 0));
 
       add(Box.createVerticalGlue(), new GridBagConstraints(0, ++row, 1, 1, 1, 100.0D, 18, 2, new Insets(0, 0, 0, 0), 0, 0));
 
@@ -168,7 +165,7 @@ public class SettingsDialog extends JDialog
     */
    public void fromConfig()
    {
-      int baudRate = getProp("serial.baudRate", DEFAULT_BAUD_RATE);
+      int baudRate = getProp("serial.baudRate", ConfigDefault.BAUD_RATE);
 
       for (int i = 0; i < cboBaudRate.getItemCount(); i++)
       {
@@ -179,7 +176,7 @@ public class SettingsDialog extends JDialog
          }
       }
 
-      int updateMsec = getProp("autoUpdateMsec", DEFAULT_AUTO_UPDATE_MSEC);
+      int updateMsec = getProp("autoUpdateMsec", ConfigDefault.AUTO_UPDATE_MSEC);
       for (int i = 0; i < cboAutoUpdate.getItemCount(); i++)
       {
          if (AUTO_UPDATE_MSEC[i] == updateMsec)
@@ -189,8 +186,10 @@ public class SettingsDialog extends JDialog
          }
       }
 
-      int recvTimeout = getProp("receiveTimeout", DEFAULT_RECV_TIMEOUT_MSEC);
+      int recvTimeout = getProp("receiveTimeout", ConfigDefault.RECV_TIMEOUT_MSEC);
       inpRecvTimeout.setText(Integer.toString(recvTimeout));
+
+      inpTelegramVars.setText(props.getProperty("telegramVariables", ConfigDefault.TELEGRAM_VARS));
 
       boolean resetOnOpen = Integer.parseInt(props.getProperty("resetOnOpen", "0")) == 1;
       cboResetOnOpen.setSelected(resetOnOpen);
@@ -207,6 +206,7 @@ public class SettingsDialog extends JDialog
       props.setProperty("serial.baudRate", Integer.toString(((Integer) cboBaudRate.getSelectedItem()).intValue()));
       props.setProperty("autoUpdateMsec", Integer.toString(AUTO_UPDATE_MSEC[cboAutoUpdate.getSelectedIndex()]));
       props.setProperty("resetOnOpen", cboResetOnOpen.isSelected() ? "1" : "0");
+      props.setProperty("telegramVariables", inpTelegramVars.getText());
 
       try
       {
@@ -218,7 +218,7 @@ public class SettingsDialog extends JDialog
       {
          Dialogs.showExceptionDialog(e, I18n.formatMessage("Error.invalidConfigValue",
             new String[] { I18n.getMessage("Settings.receiveTimeout") }));
-         val = DEFAULT_RECV_TIMEOUT_MSEC;
+         val = ConfigDefault.RECV_TIMEOUT_MSEC;
       }
       if (val < 100) val = 100;
       else if (val > 10000) val = 10000;

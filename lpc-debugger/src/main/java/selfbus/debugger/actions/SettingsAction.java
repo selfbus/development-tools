@@ -30,5 +30,7 @@ public class SettingsAction extends BasicAction
       dialog.setDefaultCloseOperation(2);
       dialog.setModal(true);
       dialog.setVisible(true);
+
+      MainWindow.getInstance().settingsChanged();
    }
 }

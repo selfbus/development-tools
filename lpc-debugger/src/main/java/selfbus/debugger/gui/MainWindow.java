@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
@@ -36,7 +37,6 @@ import javax.swing.table.TableRowSorter;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ch.qos.logback.core.status.StatusManager;
 import selfbus.debugger.Application;
 import selfbus.debugger.actions.ActionFactory;
 import selfbus.debugger.actions.AutoUpdateAction;
@@ -69,6 +69,7 @@ public class MainWindow extends JFrame implements DebugListener
    private final JToolBar toolBar = new JToolBar("mainToolbar");
    private final JPanel statusBar = new JPanel();
    private final JLabel statusVariable = new JLabel();
+   private final JLabel statusMessage = new JLabel();
    private final JLabel statusIndicator = new JLabel();
    private final JComboBox<String> cboConnection = new JComboBox<String>();
    private VariablesTableModel varsTableModel;
@@ -82,8 +83,9 @@ public class MainWindow extends JFrame implements DebugListener
    private final JScrollPane varsView;
    private final String demoConnectionName = I18n.getMessage("MainWindow.simulatedConnection");
    private final JPopupMenu tablePopup = new JPopupMenu();
+   private VariableValueCellRenderer variableValueCellRenderer;
    private JToggleButton filterVarsButton;
-   private boolean errorStatusIconType; 
+   private boolean errorStatusIconType;
 
    private final Icon statusDisconnectedIcon = ImageCache.getIcon("misc/status-disconnected");
    private final Icon statusErrorIcon = ImageCache.getIcon("misc/status-error");
@@ -302,15 +304,19 @@ public class MainWindow extends JFrame implements DebugListener
     */
    protected void setupStatusbar()
    {
-      statusBar.setLayout(new BorderLayout());
+      statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
 
       statusIndicator.setBorder(BorderFactory.createLineBorder(statusBar.getBackground(), 2));
       statusIndicator.setIcon(statusDisconnectedIcon);
-      statusBar.add(statusIndicator, BorderLayout.WEST);
+      statusBar.add(statusIndicator);
 
-      statusVariable.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+      statusMessage.setText(" ");
+      statusBar.add(statusMessage);
+
+      statusBar.add(new SeparatorPanel());
+
       statusVariable.setText(" ");
-      statusBar.add(statusVariable, BorderLayout.CENTER);
+      statusBar.add(statusVariable);
    }
 
    /**
@@ -416,8 +422,11 @@ public class MainWindow extends JFrame implements DebugListener
       varsTable.setModel(newModel);
       varsTableModel = newModel;
 
-      TableColumnModel columnModel = varsTable.getColumnModel(); 
-      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(new VariableValueCellRenderer());
+      TableColumnModel columnModel = varsTable.getColumnModel();
+
+      variableValueCellRenderer = new VariableValueCellRenderer(Application.getInstance().getConfig());
+      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(variableValueCellRenderer);
+
       columnModel.getColumn(VariablesTableModel.BYTES_COLUMN).setCellRenderer(new VariableBytesCellRenderer());
 
 //      variablesView.updateUI();
@@ -619,7 +628,7 @@ public class MainWindow extends JFrame implements DebugListener
          public void run()
          {
             statusIndicator.setIcon(statusDisconnectedIcon);
-            statusVariable.setText("");
+            statusMessage.setText("");
 
             ((ConnectAction) actionFactory.getAction("connectAction")).setDisconnected();
 
@@ -643,7 +652,7 @@ public class MainWindow extends JFrame implements DebugListener
          @Override
          public void run()
          {
-            statusVariable.setText(message);
+            statusMessage.setText(message);
 
             if (success)
             {
@@ -754,4 +763,13 @@ public class MainWindow extends JFrame implements DebugListener
          }
       }
    };
+
+   /**
+    * Called when the settings were changed.
+    */
+   public void settingsChanged()
+   {
+      if (variableValueCellRenderer != null)
+         variableValueCellRenderer.settingsChanged();
+   }
 }

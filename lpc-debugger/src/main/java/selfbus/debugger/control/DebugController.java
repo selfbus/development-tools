@@ -4,10 +4,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import selfbus.debugger.gui.Dialogs;
 import selfbus.debugger.misc.I18n;
 import selfbus.debugger.model.Variable;
 import selfbus.debugger.model.cdb.SymbolSpec;

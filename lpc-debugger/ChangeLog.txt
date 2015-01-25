@@ -1,10 +1,6 @@
-2014-12-27  Version 1.1
-        The timeout for communication with the LPC is now configurable
-        Do not disconnect on communication errors, display a status message instead
-
-2014-12-25
-        Fixed display of program version in window title
-        Now displaying arrays as decimal values in the values column
+2015-01-25
+        Re-added version to main window's title
+        Added an about dialog
 
 2014-12-24  Version 1.0
         Fixed display of array size

@@ -1,0 +1,1 @@
+Version ${project.version}, built at ${timestamp}, GIT revision ${buildNumber}

@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public final class Application extends AbstractApplication
    private final DebugController controller = new DebugController();
    private File cdbFile;
    private MainWindow win;
-   private String version;
+   private String version, buildNumber, buildDate;
 
    /**
     * @return The application instance.
@@ -62,12 +63,25 @@ public final class Application extends AbstractApplication
     */
    public String getVersion()
    {
-      return version == null ? "(development)" : version;
+      return StringUtils.isEmpty(version) ? "(devel)" : version;
    }
 
    /**
-    * {@inheritDoc}
+    * @return The build number.
     */
+   public String getBuildNumber()
+   {
+      return buildNumber;
+   }
+
+   /**
+    * @return The build date.
+    */
+   public String getBuildDate()
+   {
+      return buildDate;
+   }
+
    @Override
    protected void startup()
    {
@@ -79,8 +93,28 @@ public final class Application extends AbstractApplication
          loadConfig(configFile);
       }
 
-      Properties props = getManifestProperties(getClass());
+//      Properties props = getManifestProperties(getClass());
+      Properties props = new Properties();
+      try
+      {
+         props.load(getClass().getClassLoader().getResourceAsStream("build.properties"));
+      }
+      catch (IOException e)
+      {
+         throw new RuntimeException(e);
+      }
+
       version = props.getProperty("version");
+      if (version.startsWith("${"))
+         version = null;
+
+      buildNumber = props.getProperty("build.number");
+      if (buildNumber.startsWith("${"))
+         buildNumber = null;
+
+      buildDate = props.getProperty("build.date");
+      if (buildDate.startsWith("${"))
+         buildDate = null;
 
       win = new MainWindow(this);
       controller.addListener(win);
@@ -161,7 +195,7 @@ public final class Application extends AbstractApplication
 
       LOGGER.debug("{} variables loaded", variables.size());
       controller.setVariables(variables);
-      win.setTitleFile(file.getName());
+      win.setTitle(file.getName() + " - " + I18n.formatMessage("App.name", new String[] { getVersion() }));
       cdbFile = file;
 
       win.initialUpdate();
@@ -193,7 +227,7 @@ public final class Application extends AbstractApplication
       controller.setVariables(variables);
 
       getConfig().setProperty("lastOpenDir", file.getParentFile().getAbsolutePath());
-      win.setTitleFile(file.getName());
+      win.setTitle(file.getName() + " - " + I18n.formatMessage("App.name", new String[] { getVersion() }));
    }
 
    public void reloadFiles()
@@ -205,9 +239,9 @@ public final class Application extends AbstractApplication
 
    /**
     * Get the manifest properties of the JAR that contains the given class.
-    * 
-    * @param clazz - the class to use for searching the manifest properties. 
-    * 
+    *
+    * @param clazz - the class to use for searching the manifest properties.
+    *
     * @return the manifest's properties.
     */
    public Properties getManifestProperties(Class<?> clazz)
@@ -230,7 +264,7 @@ public final class Application extends AbstractApplication
       }
       catch (IOException e)
       {
-         Dialogs.formatExceptionMessage(e, "Failed to load the manifest from the FTS jar");
+         Dialogs.formatExceptionMessage(e, "Failed to load the manifest from the application's jar");
       }
 
       return manifestProps;

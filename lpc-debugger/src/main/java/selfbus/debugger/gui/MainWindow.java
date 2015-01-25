@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -34,8 +32,6 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
-
-import org.apache.commons.lang3.StringUtils;
 
 import selfbus.debugger.Application;
 import selfbus.debugger.actions.ActionFactory;
@@ -66,16 +62,14 @@ public class MainWindow extends JFrame implements DebugListener
 
    private static MainWindow instance;
 
-   private final JToolBar toolBar = new JToolBar("mainToolbar");
-   private final JPanel statusBar = new JPanel();
-   private final JLabel statusVariable = new JLabel();
-   private final JLabel statusMessage = new JLabel();
-   private final JLabel statusIndicator = new JLabel();
-   private final JComboBox<String> cboConnection = new JComboBox<String>();
+   private JToolBar toolBar = new JToolBar("mainToolbar");
+   private JPanel statusBar = new JPanel();
+   private JLabel statusVariable = new JLabel();
+   private JComboBox<String> cboConnection = new JComboBox<String>();
    private VariablesTableModel varsTableModel;
    private TableRowSorter<VariablesTableModel> rowSorter;
-   private final ExtTableColumnModel varsTableColumnModel = new ExtTableColumnModel();
-   private final ActionFactory actionFactory = ActionFactory.getInstance();
+   private ExtTableColumnModel varsTableColumnModel = new ExtTableColumnModel();
+   private ActionFactory actionFactory = ActionFactory.getInstance();
    private boolean initialUpdate;
    private boolean filterVariables;
    private final Application application;
@@ -83,34 +77,26 @@ public class MainWindow extends JFrame implements DebugListener
    private final JScrollPane varsView;
    private final String demoConnectionName = I18n.getMessage("MainWindow.simulatedConnection");
    private final JPopupMenu tablePopup = new JPopupMenu();
-   private VariableValueCellRenderer variableValueCellRenderer;
    private JToggleButton filterVarsButton;
-   private boolean errorStatusIconType;
-
-   private final Icon statusDisconnectedIcon = ImageCache.getIcon("misc/status-disconnected");
-   private final Icon statusErrorIcon = ImageCache.getIcon("misc/status-error");
-   private final Icon statusErrorAltIcon = ImageCache.getIcon("misc/status-error-alt");
-   private final Icon statusOkIcon = ImageCache.getIcon("misc/status-ok");
 
    /**
     * Create a main application window.
-    * 
+    *
     * @param application - the application that owns this window.
     */
    public MainWindow(final Application application)
    {
-      super();
+      super(I18n.formatMessage("App.name", new String[] { application.getVersion() }));
 
       this.application = application;
       instance = this;
 
       filterVariables = "1".equals(application.getConfig().getProperty("filterVariables", "1"));
 
-      setTitleFile(null);
       setDefaultCloseOperation(2);
-
       addWindowListener(new WindowAdapter()
       {
+         @Override
          public void windowClosing(WindowEvent e)
          {
             application.exit();
@@ -125,7 +111,10 @@ public class MainWindow extends JFrame implements DebugListener
       setLayout(new BorderLayout());
 
       add(statusBar, BorderLayout.SOUTH);
-      setupStatusbar();
+      statusBar.setLayout(new BorderLayout());
+      statusVariable.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
+      statusVariable.setText(" ");
+      statusBar.add(statusVariable, BorderLayout.CENTER);
 
       add(toolBar, BorderLayout.NORTH);
       setupToolbar();
@@ -186,8 +175,10 @@ public class MainWindow extends JFrame implements DebugListener
       add(varsView, "Center");
 
       cboConnection.setMaximumSize(new Dimension(150, 32));
+      cboConnection.setPreferredSize(new Dimension(150, cboConnection.getPreferredSize().height));
       cboConnection.addActionListener(new ActionListener()
       {
+         @Override
          public void actionPerformed(ActionEvent e)
          {
             final DebugController controller = application.getController();
@@ -229,20 +220,6 @@ public class MainWindow extends JFrame implements DebugListener
    }
 
    /**
-    * Set the file that is displayed in the main window.
-    * 
-    * @param name - the name of the file in the main window
-    */
-   public void setTitleFile(String name)
-   {
-      String title = I18n.formatMessage("App.name", new String[] { application.getVersion() });
-
-      if (StringUtils.isEmpty(name))
-         setTitle(title);
-      else setTitle(name + " - " + title);
-   }
-   
-   /**
     * Setup the tablePopup.
     */
    protected void setupTablePopup()
@@ -259,14 +236,14 @@ public class MainWindow extends JFrame implements DebugListener
          if (idx == VariablesTableModel.VISIBLE_COLUMN)
             label = I18n.getMessage("VariableComponent.visibleHeader");
          else label = varsTableModel.getColumnName(idx);
-         
+
          final JCheckBox cbx = new JCheckBox(label);
          boolean isVisible = "1".equals(config.getProperty("columnVisible" + cidx, "1"));
          cbx.setSelected(isVisible);
 
          if (!isVisible)
             varsTable.getColumnModel().removeColumn(col);
-         
+
          cbx.addActionListener(new ActionListener()
          {
             @Override
@@ -300,26 +277,6 @@ public class MainWindow extends JFrame implements DebugListener
    }
 
    /**
-    * Setup the status bar.
-    */
-   protected void setupStatusbar()
-   {
-      statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
-
-      statusIndicator.setBorder(BorderFactory.createLineBorder(statusBar.getBackground(), 2));
-      statusIndicator.setIcon(statusDisconnectedIcon);
-      statusBar.add(statusIndicator);
-
-      statusMessage.setText(" ");
-      statusBar.add(statusMessage);
-
-      statusBar.add(new SeparatorPanel());
-
-      statusVariable.setText(" ");
-      statusBar.add(statusVariable);
-   }
-
-   /**
     * Setup the toolbar.
     */
    protected void setupToolbar()
@@ -344,6 +301,8 @@ public class MainWindow extends JFrame implements DebugListener
       toolBar.addSeparator();
       toolBar.add(actionFactory.getAction("showColumnsChooserAction"));
       toolBar.add(actionFactory.getAction("settingsAction"));
+      toolBar.addSeparator();
+      toolBar.add(actionFactory.getAction("aboutAction"));
    }
 
    /**
@@ -418,15 +377,12 @@ public class MainWindow extends JFrame implements DebugListener
       if (varsTableModel != null)
          varsTableModel.removeTableModelListener(varVisibilityListener);
       newModel.addTableModelListener(varVisibilityListener);
-      
+
       varsTable.setModel(newModel);
       varsTableModel = newModel;
 
       TableColumnModel columnModel = varsTable.getColumnModel();
-
-      variableValueCellRenderer = new VariableValueCellRenderer(Application.getInstance().getConfig());
-      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(variableValueCellRenderer);
-
+      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(new VariableValueCellRenderer());
       columnModel.getColumn(VariablesTableModel.BYTES_COLUMN).setCellRenderer(new VariableBytesCellRenderer());
 
 //      variablesView.updateUI();
@@ -486,7 +442,7 @@ public class MainWindow extends JFrame implements DebugListener
 
    /**
     * Update the variable in the status bar.
-    * 
+    *
     * @param var - the variable to show in the status bar, may be null.
     */
    public void updateStatusBar(Variable var)
@@ -588,9 +544,6 @@ public class MainWindow extends JFrame implements DebugListener
    @Override
    public void connectionOpened()
    {
-      errorStatusIconType = false;
-      status(true, "");
-
       SwingUtilities.invokeLater(new Runnable()
       {
          @Override
@@ -627,9 +580,6 @@ public class MainWindow extends JFrame implements DebugListener
          @Override
          public void run()
          {
-            statusIndicator.setIcon(statusDisconnectedIcon);
-            statusMessage.setText("");
-
             ((ConnectAction) actionFactory.getAction("connectAction")).setDisconnected();
 
             actionFactory.getAction("updateAction").setEnabled(false);
@@ -642,34 +592,8 @@ public class MainWindow extends JFrame implements DebugListener
    }
 
    /**
-    * {@inheritDoc}
-    */
-   @Override
-   public synchronized void status(final boolean success, final String message)
-   {
-      SwingUtilities.invokeLater(new Runnable()
-      {
-         @Override
-         public void run()
-         {
-            statusMessage.setText(message);
-
-            if (success)
-            {
-               statusIndicator.setIcon(statusOkIcon);
-            }
-            else
-            {
-               statusIndicator.setIcon(errorStatusIconType ? statusErrorIcon : statusErrorAltIcon);
-               errorStatusIconType = !errorStatusIconType;
-            }
-         }
-      });
-   }
-
-   /**
     * Show the popup menu for selecting the visible table columns.
-    * 
+    *
     * @param x - the X position of the popup menu
     * @param y - the Y position of the popup menu
     */
@@ -763,13 +687,4 @@ public class MainWindow extends JFrame implements DebugListener
          }
       }
    };
-
-   /**
-    * Called when the settings were changed.
-    */
-   public void settingsChanged()
-   {
-      if (variableValueCellRenderer != null)
-         variableValueCellRenderer.settingsChanged();
-   }
 }

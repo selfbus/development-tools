@@ -2,8 +2,8 @@
 setlocal
 
 cd libs
-set CLASSPATH=%CLASSPATH%;.
-java -jar MAIN_JAR
+set CLASSPATH=%CLASSPATH%;libs;.
+java -jar ${mainJar}
 
 if %ERRORLEVEL% neq 0 (
    echo.

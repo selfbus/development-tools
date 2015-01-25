@@ -93,7 +93,6 @@ public final class Application extends AbstractApplication
          loadConfig(configFile);
       }
 
-//      Properties props = getManifestProperties(getClass());
       Properties props = new Properties();
       try
       {

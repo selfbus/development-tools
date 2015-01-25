@@ -382,7 +382,7 @@ public class MainWindow extends JFrame implements DebugListener
       varsTableModel = newModel;
 
       TableColumnModel columnModel = varsTable.getColumnModel();
-      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(new VariableValueCellRenderer());
+      columnModel.getColumn(VariablesTableModel.VALUE_COLUMN).setCellRenderer(new VariableValueCellRenderer(Application.getInstance().getConfig()));
       columnModel.getColumn(VariablesTableModel.BYTES_COLUMN).setCellRenderer(new VariableBytesCellRenderer());
 
 //      variablesView.updateUI();

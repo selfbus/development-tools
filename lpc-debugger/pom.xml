@@ -114,9 +114,14 @@
       <version>${tools-libraries.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.neuronrobotics</groupId>
-      <artifactId>nrjavaserial</artifactId>
-      <version>3.7.5.1</version>
+      <groupId>org.selfbus.tools-libraries</groupId>
+      <artifactId>sbtools-knxcom</artifactId>
+      <version>${tools-libraries.version}</version>
+    </dependency>
+    <dependency>
+    <groupId>org.bidib.com.neuronrobotics</groupId>
+    <artifactId>nrjavaserial</artifactId>
+    <version>3.9.3.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

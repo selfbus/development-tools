@@ -399,6 +399,16 @@ class Test_Case :
 
 # end class Test_Case
 
+def main () :
+    file_name = None
+    if len (sys.argv) > 2 :
+        file_name = sys.argv [2]
+    tc_spec = sys.argv [1]
+    for tc in glob.glob (tc_spec) :
+        print ("Handle", tc)
+        Test_Case (tc).create_code (file_name)
+# end def main
+
 if __name__ == "__main__" :
     import sys
     import glob
@@ -418,11 +428,5 @@ if __name__ == "__main__" :
 
     sys.excepthook = info
 
-    file_name = None
-    if len (sys.argv) > 2 :
-        file_name = sys.argv [2]
-    tc_spec = sys.argv [1]
-    for tc in glob.glob (tc_spec) :
-        print ("Handle", tc)
-        Test_Case (tc).create_code (file_name)
+    main ()
 ### __END__ Test_Case

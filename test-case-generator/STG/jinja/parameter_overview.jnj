@@ -1,0 +1,160 @@
+{#- jinja template: parameter_overview.jnj -#}
+{#
+## Copyright (C) 2015-2021 Martin Glueck All rights reserved
+## Neugasse 2, A--2244 Spannberg, Austria. martin@mangari.org
+## #*** <License> ************************************************************#
+## This template is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This template is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this template. If not, see <http://www.gnu.org/licenses/>.
+## #*** </License> ***********************************************************#
+##
+##++
+## Name
+##    STG/jinja/parameter_overview
+##
+## Purpose
+##    Display the parameter structer of an EIB device
+##
+## Revision Dates
+##    12-Feb-2015 (MG) Creation
+##    ««revision-date»»···
+##--
+#}
+
+{%- macro input (para) -%}
+  <input value="{{ para.value }}"/>
+{%- endmacro -%} {#- input -#}
+
+{%- macro select (para) -%}
+  <select>
+  {%- for v, t in para.type.choices.items () %}
+    <option value="{{ v }}"
+        {%- if v == para.value %} selected{% endif -%}>
+      {{ t }} [{{ v }}]
+    </option>
+  {% endfor -%}
+  </select>
+{%- endmacro -%} {#- select -#}
+
+{%- macro block (block) -%}
+  {{ block.text }}
+  <ul>
+    {%- for c in block.children %}
+      {{ element_as_li (c) }}
+    {% endfor -%}
+  </ul>
+{%- endmacro -%} {#- block -#}
+
+{%- macro choose (choose) -%}
+  {{ choose.ref.parameter.text }}
+  <ul>
+    {%- for c in choose.children %}
+      {{ element_as_li (c) }}
+    {% endfor -%}
+  </ul>
+{%- endmacro -%} {#- choose -#}
+
+{%- macro when (when) -%}
+    == {{ when.test }} [{{ when.test_as_text }}]
+    <ul>
+      {%- for c in when.children %}
+        {{ element_as_li (c) }}
+      {% endfor -%}
+    </ul>
+{%- endmacro -%} {#- when -#}
+
+{%- macro parameter_ref (pref) -%}
+  {{ pref.parameter.text|default("&nbsp;", True) }}
+  <span class="type-info">
+    {%- if pref.type.Macro == "input" %}
+      {{ input (pref) }}
+    {%- elif pref.type.Macro == "select" %}
+      {{ select (pref) }}
+    {% endif -%}
+  </span>
+  <span class="address-info">
+    {%- if pref.parameter.address %}
+      {{ "@%04X M=%04X" % (pref.parameter.address, pref.parameter.mask) }}
+    {% endif -%}
+  </span>
+{%- endmacro -%} {#- parameter_ref -#}
+
+{%- macro com_object_ref (obj_ref) -%}
+  {{ obj_ref.text }} [{{ obj_ref.function_text }}]
+{%- endmacro -%} {#- com_object_ref -#}
+
+{%- macro element (c) -%}
+    {%- if c.Macro == "block" %}
+      {{ block (c) }}
+    {%- elif c.Macro == "parameter_ref" %}
+      {{ parameter_ref (c) }}
+    {%- elif c.Macro == "choose" %}
+      {{ choose (c) }}
+    {%- elif c.Macro == "when" %}
+      {{ when (c) }}
+    {%- elif c.Macro == "com_object_ref" %}
+      {{ com_object_ref (c) }}
+    {% endif -%}
+{%- endmacro -%} {#- element -#}
+
+{%- macro element_as_li (c) -%}
+  <li id="{{ c.id }}" class="{{c.Macro}}"
+      data-jstree='{ "type" : "{{c.Macro}}" }'
+  >
+    {{ element (c)}}
+  </li>
+{%- endmacro -%} {#- element_as_li -#}
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>EIB Device Program {{device.name}}</title>
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <script src="jquery-2.1.3.min.js"></script>
+    <link rel="stylesheet" href="themes/default/style.min.css" />
+    <script src="jstree.min.js"></script>
+    <style>
+      h4            { margin : 0px }
+      .type-info    { position : absolute; left : 48em; }
+      .address-info { position : absolute; left : 68em; }
+      .no-address   { color    : lightgray; }
+    </style>
+    <script>
+      $(document).ready (function () {
+        $("h1").click (function (evt) {
+          $("#parameter-tree").jstree
+            ( { types :
+                  { block          : { icon : "fa fa-credit-card"}
+                  , parameter_ref  : { icon : "fa fa-pencil"}
+                  , choose         : { icon : "fa fa-question-circle"}
+                  , when           : { icon : "fa fa-question"}
+                  , com_object_ref : { icon : "fa fa-bolt"}
+                  }
+              , plugins : [ "types" ]
+              }
+            );
+        })
+      });
+    </script>
+  </head>
+  <body>
+    <h1>EIB Device Program {{device.name}}</h1>
+    <div id="parameter-tree">
+      <ul>
+        {%- for c in device.children %}
+          {{ element_as_li (c) }}
+        {% endfor -%}
+      </ul>
+    </div>
+  </body>
+</html>
+{#- __END__ jinja template: parameter_overview.jnj -#}

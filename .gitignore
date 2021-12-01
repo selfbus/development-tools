@@ -8,3 +8,6 @@
 *.war
 *.ear
 *~
+
+# python compile files cache
+__pycache__

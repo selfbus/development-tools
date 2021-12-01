@@ -1,0 +1,117 @@
+{#- jinja template: parameter_overview.jnj -#}
+{#
+## Copyright (C) 2015-2021 Martin Glueck All rights reserved
+## Neugasse 2, A--2244 Spannberg, Austria. martin@mangari.org
+## #*** <License> ************************************************************#
+## This template is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This template is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this template. If not, see <http://www.gnu.org/licenses/>.
+## #*** </License> ***********************************************************#
+##
+##++
+## Name
+##    STG/jinja/parameters-as-text
+##
+## Purpose
+##    Display the parameter structer of an EIB device as plain text file
+##
+## Revision Dates
+##    12-Feb-2015 (MG) Creation
+##    ««revision-date»»···
+##--
+#}
+
+{%- macro head (kind, level) -%}{{ " " * level }}{{ kind }} {% endmacro -%}
+
+{%- macro input (para, level) -%}
+  {{ head ("", level + 1) }}  {{ para.value }} { {{- para.type.min -}} / {{- para.type.max -}} }
+{%- endmacro -%} {#- input -#}
+
+{%- macro select (para, level) -%}
+  {{ head ("", level + 1) }}
+  {%- for v, t in para.type.choices.items () -%}
+    {%- if v == para.value -%} { {%- endif -%}{{ t }}/{{ v }}{%- if v == para.value -%} } {%- endif -%} {{ " " }}
+  {%- endfor -%}
+{%- endmacro -%} {#- select -#}
+
+{%- macro block (block, parent, level = 0) -%}
+{{ head ("B", level) }}{{ block.text }} [{{ block.id}}]
+{%- if block.ref %}[{{block.ref.id}}][{{block.ref.parameter.id}}]{% endif %}
+{%- for c in block.children %}
+{{ element (c, block, level + 1) }}
+{%- endfor -%}
+{%- endmacro -%} {#- block -#}
+
+{%- macro parameter_ref (pref, parent, level) -%}
+{{ head ("R", level) }}{{ pref.parameter.text|default(pref.parameter.name, True) }}
+{%- if pref.parameter.address -%}
+{{ " 0x%04X M=%04X" % (pref.parameter.address, pref.parameter.mask) }}
+{%- endif %} [{{ pref.id }}][{{ pref.parameter.id }}]
+{% if pref.type.Macro == "input" -%}
+  {{ input (pref, level) }}
+{%- elif pref.type.Macro == "select" -%}
+   {{ select (pref, level) }}
+{%- endif -%}
+{%- endmacro -%} {#- parameter_ref -#}
+
+{%- macro choose (choose, parent, level) -%}
+{{ head ("c", level) }}{{ choose.ref.parameter.text|default(choose.ref.parameter.name, True) }} [{{ choose.ref.id }}][{{ choose.ref.parameter.id }}]
+{%- for c in choose.children %}
+  {{ element (c, choose, level + 1) }}
+{%- endfor -%}
+{%- endmacro -%} {#- choose -#}
+
+{%- macro when (when, parent, level) -%}
+{{ head ("?", level) }}{{ when.test }} [{{ when.test_as_text }}]
+{%- for c in when.children %}
+  {{ element (c, when, level + 1) }}
+{%- endfor -%}
+{%- endmacro -%} {#- when -#}
+
+{%- macro assign (assign, parent, level) -%}
+{{ head ("=", level) }}{{ assign.parameter.text }}
+{%- if assign.source_param_ref %} {{ assign.source_param_ref.text }}{% else %}{{ assign.value }}{% endif -%}
+{%- if assign.parameter.address -%}
+{{ " 0x%04X M=%04X" % (assign.parameter.address, assign.parameter.mask) }}
+{%- endif -%}
+{%- endmacro -%} {#- assign -#}
+
+{%- macro com_object_ref (obj_ref, parent, level) -%}
+{{ head ("o", level) }}{{ obj_ref.text }} [{{ obj_ref.function_text }}] ({{ obj_ref.number }}) [{{ obj_ref.id }}][{{ obj_ref.object.id }}]
+{%- endmacro -%} {#- com_object_ref -#}
+
+{%- macro element (c, parent, level = 0) -%}
+  {%- if c.Macro == "block" -%}
+    {{ block (c, parent, level) }}
+  {%- elif c.Macro == "parameter_ref" -%}
+    {{ parameter_ref (c, parent, level) }}
+  {%- elif c.Macro == "choose" -%}
+    {{ choose (c, parent, level) }}
+  {%- elif c.Macro == "when" -%}
+    {{ when (c, parent, level) }}
+  {%- elif c.Macro == "com_object_ref" -%}
+    {{ com_object_ref (c, parent, level) }}
+  {%- elif c.Macro == "assign" -%}
+    {{ assign (c, parent, level) }}
+  {%- else -%}
+    [[{{ c.Macro }}]]
+  {%- endif -%}
+{%- endmacro -%} {#- element -#}
+
+EEPROM of device {{ device.name }}/{{ device.id }}
+
+Application Number  {{ device.app_number }}/0x{{ "%X" % device.app_number }}
+Application Version {{ device.app_version }}/0x{{ "%X" % device.app_version }}
+Load Compare        {{device.load_compare }}
+{% for c in device.children %}
+{{ element (c, None) }}
+{%- endfor -%}

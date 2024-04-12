@@ -255,7 +255,8 @@ class Decoder(srd.Decoder):
                             out = self.rowid_databyte
                     else:
                         if self.checksum != 0:
-                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_checksum_error, 'Checksum Err')
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_checksum_error,
+                                      'Checksum Err')
                         out = self.rowid_checksum
 
                 else:  # Not a timeout => another bit arrived
@@ -269,7 +270,7 @@ class Decoder(srd.Decoder):
                 if out is not None:
                     self.putx(self.start_sample, self.byte_end_sample, out, '{0:02x}'.format(self.byte))
 
-                if not falling_edge: # Timeout => end of transmission
+                if not falling_edge:  # Timeout => end of transmission
                     # if self.end_sample > 0:
                     #     wait = self.byte0_start_sample - self.end_sample
                     #     if self.telegram_bytes == 1:
@@ -436,9 +437,9 @@ class Decoder(srd.Decoder):
                     details += 'FunctionPropertyState_Read'
                 elif apcf_type == 9:
                     details += 'FunctionPropertyState_Response'
-                elif apcf_type >= 0xa and apcf_type < 0x38:
+                elif 0xa <= apcf_type < 0x38:
                     details += 'USERMSG'
-                elif apcf_type >= 0x38 and apcf_type < 0x3f:
+                elif 0x38 <= apcf_type < 0x3f:
                     details += 'Manufacturer specific USERMSG'
                 elif apcf_type == 0x3f:
                     details += 'Reserved_0x3f'

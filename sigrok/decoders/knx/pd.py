@@ -236,6 +236,7 @@ class Decoder(srd.Decoder):
 
                 if not falling_edge:  # Timeout => end of transmission
                     if self.telegram_bytes <= 1:
+                        self.byte = 0xc0
                         if self.byte == 0xcc:
                             self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'ACK')
                             out = self.rowid_ack
@@ -246,11 +247,11 @@ class Decoder(srd.Decoder):
                             self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'Busy')
                             out = self.rowid_busy
                         else:
-                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Ignored')
-                            out = None
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_random_byte, 'Ignored')
+                            out = self.rowid_databyte
                     else:
                         if self.checksum != 0:
-                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Checksum Err')
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_checksum_error, 'Checksum Err')
                         out = self.rowid_checksum
 
                 else:  # Not a timeout => another bit arrived
@@ -259,7 +260,7 @@ class Decoder(srd.Decoder):
                 if not self.parity:
                     self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Parity Err')
                     self.telegram_valid = False
-                    out = 1
+                    out = self.rowid_databyte
 
                 if out is not None:
                     self.putx(self.start_sample, self.byte_end_sample, out, '{0:02x}'.format(self.byte))

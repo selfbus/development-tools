@@ -54,8 +54,7 @@ class Decoder(srd.Decoder):
     options = (
         {'id': 'timings', 'desc': 'Bit timings',
                           'default': 'default', 'values': ('strict', 'default', 'relaxed')},
-        {'id': 'inverted_signal', 'desc': 'Inverted signal',
-                          'default': 'no', 'values': ('yes', 'no')},
+        {'id': 'inverted_signal', 'desc': 'Inverted signal', 'default': 'no', 'values': ('yes', 'no')},
     )
 
     annotations = (
@@ -90,12 +89,37 @@ class Decoder(srd.Decoder):
         self.next_min = 0
         self.next_max = 0
         self.last_bus = 1
+        self.samples_per_usec = -1
+        self.inverted_signal = False
+        self.bit_samples = -1
+        self.stop_samples = -1
+        self.byte_samples = -1
+        self.bit_samples_min = -1
+        self.bit_samples_max = -1
+        self.byte_samples_min = -1
+        self.byte_samples_max = -1
+        self.bit_offs_min = -1
+        self.bit_offs_max = -1
+        self.ack_wait_samples_min = -1
+        self.ack_wait_samples_max = -1
+        self.tel_wait_samples_min = -1
+        self.byte_end_sample = -1
+        self.checksum = 0xff
+        self.telegram = []
+        self.telegram_bytes = -1
+        self.telegram_valid = False
+        self.byte0_start_sample = -1
+        self.byte = 0
+        self.mask = 0
+        self.parity = False
         self.reset()
 
     def metadata(self, key, value):
         # Set a metadata value
         if key == srd.SRD_CONF_SAMPLERATE:
             self.samplerate = value
+            self.samples_per_usec = float(self.samplerate / 1000000.0)
+            # print("{0} samples per usec".format(self.samples_per_usec))
 
     def reset(self):
         # Reset internal decoder values
@@ -117,10 +141,7 @@ class Decoder(srd.Decoder):
         self.out_ann = self.register(srd.OUTPUT_ANN)
 
         self.inverted_signal = (self.options['inverted_signal'] == 'yes')
-        self.samples_per_usec = float(self.samplerate / 1000000.0)
-        # print("{0} samples per usec".format(self.samples_per_usec))
-
-        self.bit_samples = int(self.samplerate / self.bitrate) # 104 usec (for standard 9600 baud)
+        self.bit_samples = int(self.samplerate / self.bitrate)  # 104 usec (for standard 9600 baud)
         self.stop_samples = int(self.bit_samples * 3)
         self.byte_samples = self.bit_samples * 13
 
@@ -145,7 +166,6 @@ class Decoder(srd.Decoder):
             self.byte_samples_max = self.byte_samples + 30 * self.samples_per_usec + 5
             self.bit_offs_min = int(-9 * self.samples_per_usec) - 1
             self.bit_offs_max = int(40 * self.samples_per_usec) + 2
-
 
         # See KNX docu 3/2/2 p. 32+ for timings
         # The end of byte is 2 bit-times too late in the algorythm. Therefore the lower values below.
@@ -177,7 +197,6 @@ class Decoder(srd.Decoder):
             # (rx, tx) = self.wait(wait_conditions)
             (bus, tx) = self.wait()
 
-
             if self.inverted_signal:
                 bus = 1 - bus
 
@@ -193,7 +212,8 @@ class Decoder(srd.Decoder):
                 continue
 
             if self.state == 'BYTE_END':
-                #print("  samplenum={0}, falling_edge={1:1}, parity={2:1}".format(self.samplenum, falling_edge, self.parity))
+                # print("  samplenum={0}, falling_edge={1:1}, parity={2:1}".format(self.samplenum,
+                #                                                                  falling_edge, self.parity))
                 self.byte &= 0xff
                 self.checksum ^= self.byte
                 self.telegram.append(self.byte)
@@ -205,7 +225,7 @@ class Decoder(srd.Decoder):
                 else:
                     self.byte_end_sample = self.start_sample + self.byte_samples
 
-                if not falling_edge: # Timeout => end of transmission
+                if not falling_edge:  # Timeout => end of transmission
                     if self.telegram_bytes <= 1:
                         if self.byte == 0xcc:
                             self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'ACK')
@@ -213,7 +233,7 @@ class Decoder(srd.Decoder):
                         elif self.byte == 0x0c:
                             self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'NAK')
                             out = Ann.rowid_nack
-                        elif self.byte == 0xc0 or self.byte == 0x00: # todo separate NACK_BUSY (0x00)
+                        elif self.byte == 0xc0 or self.byte == 0x00:  # todo separate NACK_BUSY (0x00)
                             self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'Busy')
                             out = Ann.rowid_busy
                         else:
@@ -236,15 +256,15 @@ class Decoder(srd.Decoder):
                     self.putx(self.start_sample, self.byte_end_sample, out, '{0:02x}'.format(self.byte))
 
                 if not falling_edge: # Timeout => end of transmission
-#                    if self.end_sample > 0:
-#                        wait = self.byte0_start_sample - self.end_sample
-#                        if self.telegram_bytes == 1:
-#                            if wait < self.ack_wait_samples_min:
-#                                self.put_err_timing(wait - self.ack_wait_samples_min)
-#                            elif wait > self.ack_wait_samples_max:
-#                                self.put_err_timing(wait - self.ack_wait_samples_max)
-#                        elif wait < self.tel_wait_samples_min:
-#                            self.put_err_timing(wait - self.tel_wait_samples_min)
+                    # if self.end_sample > 0:
+                    #     wait = self.byte0_start_sample - self.end_sample
+                    #     if self.telegram_bytes == 1:
+                    #         if wait < self.ack_wait_samples_min:
+                    #             self.put_err_timing(wait - self.ack_wait_samples_min)
+                    #         elif wait > self.ack_wait_samples_max:
+                    #             self.put_err_timing(wait - self.ack_wait_samples_max)
+                    #     elif wait < self.tel_wait_samples_min:
+                    #         self.put_err_timing(wait - self.tel_wait_samples_min)
 
                     if self.telegram_bytes >= 8:
                         self.put_telegram(self.byte0_start_sample, self.byte_end_sample, self.telegram)
@@ -253,7 +273,7 @@ class Decoder(srd.Decoder):
                     self.next_max = 0
                     self.state = 'IDLE'
                     self.end_sample = self.byte_end_sample
-                    #print("  ** end of transmission")
+                    # print("  ** end of transmission")
                     continue
 
                 self.state = 'START_BIT'
@@ -274,7 +294,7 @@ class Decoder(srd.Decoder):
                 self.start_sample = self.samplenum
                 self.next_min = self.start_sample + self.bit_samples + self.bit_offs_min
                 self.next_max = self.start_sample + self.bit_samples + self.bit_offs_max
-                #print("Start bit at {0}us".format(int(self.start_sample / self.samples_per_usec)))
+                # print("Start bit at {0}us".format(int(self.start_sample / self.samples_per_usec)))
                 continue
 
             if self.state == 'BYTE':
@@ -283,7 +303,8 @@ class Decoder(srd.Decoder):
                     self.parity = not self.parity
 
                 # print("  at +{0}us, falling_edge={1:1}, parity={2:1}, mask=0x{3:x},"
-                #    .format(int((self.samplenum - self.start_sample) / self.samples_per_usec), falling_edge, self.parity, self.mask))
+                #    .format(int((self.samplenum - self.start_sample) / self.samples_per_usec),
+                #     falling_edge, self.parity, self.mask))
 
                 if self.mask < 0x100:
                     self.mask <<= 1

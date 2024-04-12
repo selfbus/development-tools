@@ -63,6 +63,7 @@ class Decoder(srd.Decoder):
         ('warnings', 'Human-readable warnings'),                # 9
         ('bytes', 'Bytes on the KNX bus'),                      # 10
         ('acknowledge-frame', 'Short acknowledge frame'),       # 11
+        ('acknowledge-busy-nack', 'BUSY-NAK collision'),        # 12
     )
 
     # these must match order of above annotations
@@ -78,10 +79,11 @@ class Decoder(srd.Decoder):
     rowid_error = 9
     rowid_label = 10
     rowid_label_ack = 11
+    rowid_busy_nack = 12
 
     annotation_rows = (
          ('id-telegram', 'Telegram', (rowid_label, rowid_label_ack)),
-         ('id-bytes', 'Bytes', (rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy)),
+         ('id-bytes', 'Bytes', (rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy, rowid_busy_nack)),
          ('id-warnings', 'Warnings', (rowid_error, rowid_byte_parity_error, rowid_checksum_error,
                                       rowid_random_byte, rowid_error_timing)),
     )
@@ -236,16 +238,18 @@ class Decoder(srd.Decoder):
 
                 if not falling_edge:  # Timeout => end of transmission
                     if self.telegram_bytes <= 1:
-                        self.byte = 0xc0
                         if self.byte == 0xcc:
                             self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'ACK')
                             out = self.rowid_ack
                         elif self.byte == 0x0c:
                             self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'NAK')
                             out = self.rowid_nack
-                        elif self.byte == 0xc0 or self.byte == 0x00:  # todo separate NACK_BUSY (0x00)
-                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'Busy')
+                        elif self.byte == 0xc0:
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'BUSY')
                             out = self.rowid_busy
+                        elif self.byte == 0x00:
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'BUSY_NAK')
+                            out = self.rowid_busy_nack
                         else:
                             self.putx(self.start_sample, self.byte_end_sample, self.rowid_random_byte, 'Ignored')
                             out = self.rowid_databyte

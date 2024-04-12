@@ -13,7 +13,10 @@ changes from 1 to 0.  The result is stored in mycapture.sr
 ## Installation
 Copy the content of the [decoders](decoders) directory to the place where your Sigrok decoders are installed.  
 
+The [decoders/knx](decoders/knx) directory contains protocol decoder for Pulseview version >=0.4.1 (API 3.0).  
 The [decoders/eib](decoders/eib) directory contains protocol decoder for Pulseview version <=0.4.0 (API 2.3).
 
 Default Linux Sigrok decoders directory `/usr/share/libsigrokdecode/decoders` or `/usr/local/libsigrokdecode/decoders`    
 Default Windows Sigrok decoders directory `C:\Program Files\sigrok\PulseView\share\libsigrokdecode\decoders`
+
+![knx_decoder_overview.png](pictures/knx_decoder_overview.png)

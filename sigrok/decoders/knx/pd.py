@@ -81,9 +81,9 @@ class Decoder(srd.Decoder):
 
     annotation_rows = (
          ('id-telegram', 'Telegram', (rowid_label, rowid_label_ack)),
+         ('id-bytes', 'Bytes', (rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy)),
          ('id-warnings', 'Warnings', (rowid_error, rowid_byte_parity_error, rowid_checksum_error,
                                       rowid_random_byte, rowid_error_timing)),
-         ('id-bytes', 'Bytes', (rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy)),
     )
 
     def __init__(self, **kwargs):

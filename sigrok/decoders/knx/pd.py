@@ -25,13 +25,6 @@ KNX_RX = 0
 KNX_TX = 1
 
 
-class Ann:
-    rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy, \
-        A5, A6, A7, \
-        rowid_error, rowid_label, rowid_label_ack = \
-        range(11)
-
-
 class Decoder(srd.Decoder):
     api_version = 3
     id = 'knx'
@@ -68,13 +61,28 @@ class Decoder(srd.Decoder):
         ('random-byte', 'Random byte'),                         # 7
         ('err-timing', 'Time between transmissions violated'),  # 8
         ('warnings', 'Human-readable warnings'),                # 9
-        ('bytes', 'Bytes on the EIB bus'),                      # 10
+        ('bytes', 'Bytes on the KNX bus'),                      # 10
+        ('acknowledge-frame', 'Short acknowledge frame'),       # 11
     )
 
+    # these must match order of above annotations
+    rowid_byte_parity_error = 0
+    rowid_databyte = 1
+    rowid_checksum = 2
+    rowid_checksum_error = 3
+    rowid_ack = 4
+    rowid_nack = 5
+    rowid_busy = 6
+    rowid_random_byte = 7
+    rowid_error_timing = 8
+    rowid_error = 9
+    rowid_label = 10
+    rowid_label_ack = 11
+
     annotation_rows = (
-         ('id-telegram', 'Telegram', (Ann.rowid_label, Ann.rowid_label_ack)),
-         ('id-warnings', 'Warnings', (Ann.rowid_error,)),
-         ('id-bytes', 'Bytes', (Ann.rowid_databyte, Ann.rowid_checksum, Ann.rowid_ack, Ann.rowid_nack, Ann.rowid_busy)),
+         ('id-telegram', 'Telegram', (rowid_label, rowid_label_ack)),
+         ('id-warnings', 'Warnings', (rowid_error,)),
+         ('id-bytes', 'Bytes', (rowid_databyte, rowid_checksum, rowid_ack, rowid_nack, rowid_busy)),
     )
 
     def __init__(self, **kwargs):
@@ -228,27 +236,27 @@ class Decoder(srd.Decoder):
                 if not falling_edge:  # Timeout => end of transmission
                     if self.telegram_bytes <= 1:
                         if self.byte == 0xcc:
-                            self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'ACK')
-                            out = Ann.rowid_ack
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'ACK')
+                            out = self.rowid_ack
                         elif self.byte == 0x0c:
-                            self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'NAK')
-                            out = Ann.rowid_nack
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'NAK')
+                            out = self.rowid_nack
                         elif self.byte == 0xc0 or self.byte == 0x00:  # todo separate NACK_BUSY (0x00)
-                            self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_label_ack, 'Busy')
-                            out = Ann.rowid_busy
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_label_ack, 'Busy')
+                            out = self.rowid_busy
                         else:
-                            self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_error, 'Ignored')
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Ignored')
                             out = None
                     else:
                         if self.checksum != 0:
-                            self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_error, 'Checksum Err')
-                        out = Ann.rowid_checksum
+                            self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Checksum Err')
+                        out = self.rowid_checksum
 
                 else:  # Not a timeout => another bit arrived
-                    out = Ann.rowid_databyte
+                    out = self.rowid_databyte
 
                 if not self.parity:
-                    self.putx(self.start_sample, self.byte_end_sample, Ann.rowid_error, 'Parity Err')
+                    self.putx(self.start_sample, self.byte_end_sample, self.rowid_error, 'Parity Err')
                     self.telegram_valid = False
                     out = 1
 
@@ -527,7 +535,7 @@ class Decoder(srd.Decoder):
             details += ': ' + data.strip()
 
         msg = '{0} to {1}: {2}'.format(from_addr, dest_addr, details)
-        self.put(ss, es, self.out_ann, [Ann.rowid_label, [msg]])
+        self.put(ss, es, self.out_ann, [self.rowid_label, [msg]])
 
     #
     # Get the data of a group value write/response as hex string
